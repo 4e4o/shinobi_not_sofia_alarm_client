@@ -13,7 +13,7 @@ public:
     ~Application();
 
 private:
-    void start(TConfigItems&) override final;
+    bool start(TConfigItems&) override final;
     void doExit() override final;
 
     std::unique_ptr<StrandHolder> m_strand;

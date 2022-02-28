@@ -24,7 +24,7 @@ void Application::doExit() {
     m_closeConnections();
 }
 
-void Application::start(TConfigItems &notSofiaServers) {
+bool Application::start(TConfigItems &notSofiaServers) {
     m_strand.reset(new StrandHolder(io()));
     m_intQueue.reset(new IPCIntQueue(IPC_QUEUE_NAME));
 
@@ -50,4 +50,6 @@ void Application::start(TConfigItems &notSofiaServers) {
 
         client->start(clientConfig->getIp(), clientConfig->getPort());
     }
+
+    return true;
 }

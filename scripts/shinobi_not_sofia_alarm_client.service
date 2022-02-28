@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=root
 Group=root
-ExecStart=/usr/bin/bash -c '/usr/local/bin/shinobi_not_sofia_alarm_client 10.10.10.11 555'
+ExecStart=/usr/bin/bash -c '/usr/local/bin/shinobi_not_sofia_alarm_client --c /usr/local/etc/shinobi_not_sofia_alarm_client/config.txt'
 Restart=always
 
 [Install]
