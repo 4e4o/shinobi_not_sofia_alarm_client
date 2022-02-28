@@ -1,29 +1,20 @@
-#include <iostream>
+#include "NotSofiaSession.hpp"
 
-#include <boost/asio/ip/address.hpp>
+#include <iostream>
 
 #include <Misc/Timer.hpp>
 #include <Misc/Debug.hpp>
 #include <AApplication.h>
-
-#include "NotSofiaSession.hpp"
-#include "Config/ClientConfig.hpp"
-#include "Network/QueuedSessionWriter.hpp"
+#include <Network/QueuedSessionWriter.hpp>
 
 #define PING_INTERVAL_SEC       4
 #define ACTIVITY_INTERVAL_SEC   10
 #define CMD_SEPARATOR           "\n"
 
-using boost::asio::ip::tcp;
-using boost::asio::ip::address;
 using boost::signals2::connection;
 
-NotSofiaSession::NotSofiaSession(const ClientConfig* c, boost::asio::io_context &io)
-    : Session(io), m_config(c) {
-}
-
-NotSofiaSession::NotSofiaSession(const ClientConfig* c, boost::asio::io_context &io, TCPSocket&& sock)
-    : Session(io, std::move(sock)), m_config(c) {
+NotSofiaSession::NotSofiaSession(boost::asio::io_context &io)
+    : Session(io) {
 }
 
 NotSofiaSession::~NotSofiaSession() {

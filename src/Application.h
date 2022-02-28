@@ -13,7 +13,6 @@ public:
     ~Application();
 
 private:
-    Config* createConfig() override final;
     void start(TConfigItems&) override final;
     void doExit() override final;
 

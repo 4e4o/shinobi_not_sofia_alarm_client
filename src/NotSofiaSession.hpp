@@ -4,13 +4,11 @@
 #include <Network/Session.hpp>
 
 class Timer;
-class ClientConfig;
 class QueuedSessionWriter;
 
 class NotSofiaSession : public Session {
 public:
-    NotSofiaSession(const ClientConfig*, boost::asio::io_context &io);
-    NotSofiaSession(const ClientConfig*, boost::asio::io_context &io, TCPSocket&& sock);
+    NotSofiaSession(boost::asio::io_context &io);
     ~NotSofiaSession();
 
     boost::signals2::signal<void(int chId)> onMotion;
@@ -25,7 +23,6 @@ private:
     bool onCommandLine(const std::string& cmd);
     void readCmd();
 
-    const ClientConfig* m_config;
     std::unique_ptr<QueuedSessionWriter> m_writer;
     std::unique_ptr<Timer> m_pingTimer;
     std::unique_ptr<Timer> m_activityTimer;
