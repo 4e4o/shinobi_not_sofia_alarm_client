@@ -17,7 +17,6 @@ private:
     void startImpl() override final;
 
     void onPingTick();
-    void onActivityTick();
     void sendCmd(const std::string& cmd);
     void readHandler(const uint8_t *ptr, std::size_t size);
     bool onCommandLine(const std::string& cmd);
@@ -25,9 +24,7 @@ private:
 
     std::unique_ptr<QueuedSessionWriter> m_writer;
     std::unique_ptr<Timer> m_pingTimer;
-    std::unique_ptr<Timer> m_activityTimer;
     std::string m_strRecv;
-    int m_recvCount;
 };
 
 #endif /* NOT_SOFIA_SESSION_HPP */

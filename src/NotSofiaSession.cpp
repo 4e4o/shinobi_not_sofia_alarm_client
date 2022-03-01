@@ -1,14 +1,11 @@
 #include "NotSofiaSession.hpp"
 
-#include <iostream>
-
+#include <Network/QueuedSessionWriter.hpp>
 #include <Misc/Timer.hpp>
 #include <Misc/Debug.hpp>
-#include <AApplication.h>
-#include <Network/QueuedSessionWriter.hpp>
 
 #define PING_INTERVAL_SEC       4
-#define ACTIVITY_INTERVAL_SEC   10
+#define RECEIVE_TIMEOUT_SEC     15
 #define CMD_SEPARATOR           "\n"
 
 using boost::signals2::connection;
@@ -21,26 +18,17 @@ NotSofiaSession::~NotSofiaSession() {
 }
 
 void NotSofiaSession::startImpl() {
+    setReceiveTimeout(RECEIVE_TIMEOUT_SEC);
+
     m_writer.reset(new QueuedSessionWriter(this));
 
-    m_recvCount = 0;
-
     m_pingTimer.reset(new Timer(io(), PING_INTERVAL_SEC));
-    m_activityTimer.reset(new Timer(io(), ACTIVITY_INTERVAL_SEC));
-
     m_pingTimer->setStrand(this, false);
-    m_activityTimer->setStrand(this, false);
-
     m_pingTimer->onTimeout.connect([this](Timer*) {
         onPingTick();
     });
 
-    m_activityTimer->onTimeout.connect([this](Timer*) {
-        onActivityTick();
-    });
-
     m_pingTimer->startTimer();
-    m_activityTimer->startTimer();
 
     readCmd();
 }
@@ -65,18 +53,7 @@ void NotSofiaSession::onPingTick() {
     sendCmd("PI");
 }
 
-void NotSofiaSession::onActivityTick() {
-    if (m_recvCount == 0) {
-        close();
-        AAP->log(boost::format("No receive activity, closing %1%") % this);
-    }
-
-    m_recvCount = 0;
-    m_activityTimer->startTimer();
-}
-
 void NotSofiaSession::readHandler(const uint8_t *ptr, std::size_t size) {
-    m_recvCount++;
     m_strRecv.append((char*)ptr, size);
 
     size_t index;
