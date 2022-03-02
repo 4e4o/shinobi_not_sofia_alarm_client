@@ -17,5 +17,5 @@ target_link_libraries(${PROJECT_NAME} boost_base)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/)
 
-install(FILES "scripts/shinobi_not_sofia_alarm_client" DESTINATION /etc/systemd/system/)
+install(FILES "scripts/shinobi_not_sofia_alarm_client.service" DESTINATION /etc/systemd/system/)
 install(FILES "scripts/config.txt" DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/shinobi_not_sofia_alarm_client/)
