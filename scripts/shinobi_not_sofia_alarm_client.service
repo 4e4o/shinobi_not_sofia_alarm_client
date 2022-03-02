@@ -1,13 +1,13 @@
 [Unit]
 Description=notSofia motion detection client
 After=network.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-User=root
-Group=root
 ExecStart=/usr/bin/bash -c '/usr/local/bin/shinobi_not_sofia_alarm_client --c /usr/local/etc/shinobi_not_sofia_alarm_client/config.txt'
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
