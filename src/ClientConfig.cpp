@@ -3,9 +3,9 @@
 #include <boost/json.hpp>
 
 ClientConfig::ClientConfig(const boost::json::object &o)
-    : m_ip(toStdString(o.at("ip").as_string())),
-      m_port(o.at("port").as_int64()),
-      m_comment(o.contains("comment") ? toStdString(o.at("comment").as_string()) : "") {
+    : m_ip(get<std::string>(o, "ip")),
+      m_port(get<std::int64_t>(o, "port")),
+      m_comment(get<std::string, true>(o, "comment")) {
 }
 
 const std::string& ClientConfig::getIp() const {
