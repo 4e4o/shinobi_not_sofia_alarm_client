@@ -12,6 +12,9 @@ using boost::signals2::connection;
 
 NotSofiaSession::NotSofiaSession(boost::asio::io_context &io)
     : Session(io) {
+    onData.connect([this](const uint8_t *ptr, std::size_t size) {
+        readHandler(ptr, size);
+    });
 }
 
 NotSofiaSession::~NotSofiaSession() {
@@ -34,13 +37,6 @@ void NotSofiaSession::startImpl() {
 }
 
 void NotSofiaSession::readCmd() {
-    auto self = shared_from_this<NotSofiaSession>();
-
-    onData.connect_extended([self](const connection &c, const uint8_t *ptr, std::size_t size) {
-        c.disconnect();
-        self->readHandler(ptr, size);
-    });
-
     readSome();
 }
 
