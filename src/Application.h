@@ -18,7 +18,7 @@ private:
 
     std::unique_ptr<StrandHolder> m_strand;
     std::unique_ptr<IPCIntQueue> m_intQueue;
-    boost::signals2::signal<void()> m_closeConnections;
+    boost::signals2::signal<void()> m_close;
 };
 
 #endif /* APPLICATION_HPP */

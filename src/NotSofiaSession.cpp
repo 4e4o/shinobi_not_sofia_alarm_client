@@ -1,52 +1,45 @@
 #include "NotSofiaSession.hpp"
 
-#include <Network/QueuedSessionWriter.hpp>
-#include <Misc/Timer.hpp>
+#include <Network/Session/Operations/SessionReader.hpp>
+#include <Network/Session/Operations/SessionWriter.hpp>
+#include <Misc/ScopeGuard.hpp>
 #include <Misc/Debug.hpp>
 
-#define PING_INTERVAL_SEC       4
-#define RECEIVE_TIMEOUT_SEC     15
-#define CMD_SEPARATOR           "\n"
+using namespace std::literals::chrono_literals;
 
-using boost::signals2::connection;
+#define PING_INTERVAL       4s
+#define RECEIVE_TIMEOUT     15s
 
-NotSofiaSession::NotSofiaSession(boost::asio::io_context &io)
-    : Session(io) {
-    onData.connect([this](const uint8_t *ptr, std::size_t size) {
-        readHandler(ptr, size);
-    });
+#define CMD_SEPARATOR       "\n"
+
+using namespace boost::asio;
+
+NotSofiaSession::NotSofiaSession(Socket *s)
+    : Session(s) {
 }
 
 NotSofiaSession::~NotSofiaSession() {
 }
 
-void NotSofiaSession::startImpl() {
-    setReceiveTimeout(RECEIVE_TIMEOUT_SEC);
+TAwaitVoid NotSofiaSession::sendCmd(const std::string& cmd) {
+    const std::string send = cmd + CMD_SEPARATOR;
+    std::vector<uint8_t> data(send.begin(), send.end());
+    co_await writer().all(data);
+    co_return;
+}
 
-    m_writer.reset(new QueuedSessionWriter(this));
-
-    m_pingTimer.reset(new Timer(io(), PING_INTERVAL_SEC));
-    m_pingTimer->setStrand(this, false);
-    m_pingTimer->onTimeout.connect([this](Timer*) {
-        onPingTick();
+TAwaitVoid NotSofiaSession::work() {
+    auto pinger = scopedSpawn<true>([this]() -> TAwaitVoid {
+        while(running()) {
+            co_await sendCmd("PI");
+            co_await wait(PING_INTERVAL);
+        }
     });
 
-    m_pingTimer->startTimer();
-
-    readCmd();
-}
-
-void NotSofiaSession::readCmd() {
-    readSome();
-}
-
-void NotSofiaSession::sendCmd(const std::string& cmd) {
-    const std::string send = cmd + CMD_SEPARATOR;
-    m_writer->writeAll(reinterpret_cast<const uint8_t *>(send.data()), send.size());
-}
-
-void NotSofiaSession::onPingTick() {
-    sendCmd("PI");
+    while(running()) {
+        std::size_t size = co_await timeout(reader().some(), RECEIVE_TIMEOUT);
+        readHandler(reader().ptr(), size);
+    }
 }
 
 void NotSofiaSession::readHandler(const uint8_t *ptr, std::size_t size) {
@@ -58,27 +51,20 @@ void NotSofiaSession::readHandler(const uint8_t *ptr, std::size_t size) {
     while ((index = m_strRecv.find(CMD_SEPARATOR)) != std::string::npos) {
         line = m_strRecv.substr(0, index);
         m_strRecv.erase(0, index + strlen(CMD_SEPARATOR));
-        if (!onCommandLine(line)) {
-            close();
-            return;
-        }
+        onCommandLine(line);
     }
-
-    readCmd();
 }
 
-bool NotSofiaSession::onCommandLine(const std::string& cmd) {
-    //    debug_print(boost::format("NotSofiaSession::onCommandLine %1% %2%") % this % cmd);
+void NotSofiaSession::onCommandLine(const std::string& cmd) {
+    debug_print_this(fmt("%1%") % cmd);
 
     if (cmd == "PO") {
-        m_pingTimer->startTimer();
-        return true;
-    }
-
-    if (cmd.starts_with("MD ")) {
+        return;
+    } else if (cmd.starts_with("MD ")) {
         const int chId = std::stoi(cmd.substr(3));
         onMotion(chId);
+        return;
     }
 
-    return true;
+    throw std::runtime_error("unknown command");
 }
