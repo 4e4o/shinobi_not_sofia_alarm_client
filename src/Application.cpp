@@ -5,8 +5,8 @@
 #include <Config/Config.hpp>
 #include <Network/Client.hpp>
 #include <Misc/StrandHolder.hpp>
-#include <Misc/Debug.hpp>
 #include <IPC/IntQueue.h>
+#include <Misc/Debug.hpp>
 
 using namespace std::literals::chrono_literals;
 
@@ -39,7 +39,8 @@ bool Application::start(TConfigItems &notSofiaServers) {
             auto session = std::static_pointer_cast<NotSofiaSession>(ws.lock());
             session->onMotion.connect([this](int chId) {
                 m_strand->post([this, chId] {
-                    m_intQueue->send(chId);
+                    // если не отошлёт значит очередь полная, похуй
+                    m_intQueue->try_send(chId);
                     debug_print_this(fmt("onMotion %1%") % chId);
                 });
             });
